@@ -1,0 +1,25 @@
+# Virtual environment
+venv/
+
+# Conda
+.conda/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+
+# Environment variables (API key burada! Asla commit'leme)
+.env
+
+# Storage (runtime'da oluşur, repo'ya gitmez)
+app/storage/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
