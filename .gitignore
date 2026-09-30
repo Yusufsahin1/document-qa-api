@@ -10,7 +10,7 @@ __pycache__/
 *.pyo
 .pytest_cache/
 
-# Environment variables (API key burada! Asla commit'leme)
+# Environment variables
 .env
 
 # Storage (runtime'da oluşur, repo'ya gitmez)
