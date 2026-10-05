@@ -1,9 +1,10 @@
-from fastapi import APIRouter, UploadFile, File
+from fastapi import APIRouter, UploadFile, File, HTTPException
 from app.services.pdf_service import extract_text_from_pdf
 from app.services.chunking_service import chunk_pages
 from app.services.embedding_service import generate_embeddings
 from app.services.vector_service import create_index, add_vectors, save_index
 import json
+from pathlib import Path
 
 router = APIRouter()
 
@@ -35,3 +36,40 @@ async def upload_document(file: UploadFile = File(...)):
              "chunk_count": len(chunks), "first_chunk": chunks[0],
              "embedding_count": len(embeddings), "embedding_dim": len(embeddings[0]) if embeddings else 0,
              "index_saved": True, "metadata_saved": True}
+
+
+METADATA_DIR = Path("app/storage/metadata")
+
+@router.get("/", tags=["Documents"])
+async def list_documents():
+    documents = []
+    
+    for json_file in METADATA_DIR.glob("*.json"):
+        json_stem = json_file.stem
+        documents.append({"document_id": json_stem, "filename": json_stem})
+
+    return {"documents": documents}
+
+
+UPLOAD_DIR = Path("app/storage/uploads")
+FAISS_DIR = Path("app/storage/faiss_index")
+
+@router.delete("/{document_id}", tags=["Documents"])
+async def delete_document(document_id: str):
+    # Silinecek dosyaların path'lerini tanımla
+    pdf_path   = UPLOAD_DIR / document_id
+    faiss_path = FAISS_DIR  / f"{document_id}.faiss"
+    meta_path  = METADATA_DIR / f"{document_id}.json"
+
+    # En az bir dosya var mı? Yoksa 404 döndür
+    if not any([pdf_path.exists(), faiss_path.exists(), meta_path.exists()]):
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    if pdf_path.exists():
+        pdf_path.unlink()
+    if faiss_path.exists():
+        faiss_path.unlink()
+    if meta_path.exists():
+        meta_path.unlink()
+
+    return {"message": f"Document '{document_id}' deleted successfully"}
